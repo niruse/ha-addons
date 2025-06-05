@@ -393,7 +393,19 @@ class v720_http(log, BaseHTTPRequestHandler):
             for param in p.split('&'):
                 if param.startswith('devicesCode'):
                     uid = param.split('=')[1]
-
+        elif self.path.startswith('/app/api/ApiSysDevices/getDevInfo'):
+            ret = {
+                "code": 200,
+                "message": "OK",
+                "data": {
+                    "devType": "V720",
+                    "devName": "Camera",
+                    "firmware": "1.0.0",
+                    "hardware": "v1",
+                    "model": "naxclow",
+                    "ip": self.client_address[0]
+                }
+            }
             gws = netifaces.gateways()
             ret = {
                 "code": 200,

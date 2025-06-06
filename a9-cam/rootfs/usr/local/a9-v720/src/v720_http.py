@@ -481,11 +481,8 @@ class v720_http(log, BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     print("-------- A9 V720 fake-server starting. --------")
-    uid = shared_uid[0]
-    print(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
-    print(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
-    print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
-    print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
+    print("Waiting for UID assignment via /getA9ConfCheck or /getDevInfo...")
+
     try:
         with ThreadingHTTPServer(("", HTTP_PORT), v720_http) as httpd:
             httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)

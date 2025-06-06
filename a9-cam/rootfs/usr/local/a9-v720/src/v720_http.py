@@ -1,3 +1,6 @@
+
+import time
+import os
 from __future__ import annotations
 from datetime import datetime
 import email.utils
@@ -50,6 +53,24 @@ class v720_sta:
     def __udp_hnd(self):
         while not self._udp.is_closed:
             pass
+
+
+    def __udp_hnd(self):
+        while not self._udp.is_closed:
+            if self._vframe_cb:
+                # Fake JPEG frame (start and end bytes of JPEG + random content)
+                fake_frame = b'\xff\xd8' + os.urandom(1024) + b'\xff\xd9'
+                self._vframe_cb(self, fake_frame)
+            time.sleep(0.1)  # simulate 10 fps
+
+    def __tcp_hnd(self):
+        while not self._tcp.is_closed:
+            if self._aframe_cb:
+                # Fake G.711 audio (ALaw 8000Hz mono — use 160 bytes for 20ms)
+                fake_audio = os.urandom(160)
+                self._aframe_cb(self, fake_audio)
+            time.sleep(0.02)  # simulate 50 fps (20ms packets)
+
 
     def set_aframe_cb(self, cb):
         self._aframe_cb = cb

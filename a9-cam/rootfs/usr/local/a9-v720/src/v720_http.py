@@ -22,8 +22,6 @@ from v720_sta import v720_sta
 
 TCP_PORT = 6123
 HTTP_PORT = 80
-shared_uid = [None]  # Used to store UID from POST endpoints
-_fake_device_store = {}
 
 def put_nowait_or_clear_if_full(q:Queue, frame):
     try:
@@ -471,7 +469,6 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.send_header('Connection', 'close')
             self.end_headers()
             self.wfile.write(b'Unknown POST request')
-
 
 if __name__ == '__main__':
     try:

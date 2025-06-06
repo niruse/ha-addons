@@ -372,7 +372,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.send_error(404, 'Not found')
 
     def do_POST(self):
-        global shared_uid  # Declare global to avoid NameError
+        global shared_uid
 
         ret = None
         hdr = [
@@ -405,9 +405,9 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0, 99999):05d}'  # fallback
+                uid = f'{random.randint(0, 99999):05d}'
 
-            shared_uid[0] = uid  # Store for later reuse
+            shared_uid[0] = uid
 
             gws = netifaces.gateways()
             ret = {
@@ -443,7 +443,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             if uid is None and shared_uid[0] is not None:
                 uid = shared_uid[0]
             elif uid is None:
-                uid = f'{random.randint(0, 99999):05d}'  # fallback
+                uid = f'{random.randint(0, 99999):05d}'
 
             if shared_uid[0] != uid:
                 shared_uid[0] = uid
@@ -480,6 +480,12 @@ class v720_http(log, BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    print("-------- A9 V720 fake-server starting. --------")
+    uid = shared_uid[0]
+    print(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
+    print(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
+    print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
+    print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
     try:
         with ThreadingHTTPServer(("", HTTP_PORT), v720_http) as httpd:
             httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -489,7 +495,5 @@ if __name__ == '__main__':
                 print('exiting..')
                 exit(0)
     except PermissionError:
-        print(
-            f'--- Can\'t open {HTTP_PORT} port due to system root permissions or maybe you have already running HTTP server?')
-        print(
-            f'--- if not try to use "sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80"')
+        print(f"--- Can't open {HTTP_PORT} port due to system root permissions or maybe you have already running HTTP server?")
+        print(f"--- if not try to use \"sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80\"")

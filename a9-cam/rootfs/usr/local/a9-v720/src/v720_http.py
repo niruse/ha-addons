@@ -1,7 +1,8 @@
 
+from __future__ import annotations
 import time
 import os
-from __future__ import annotations
+
 from datetime import datetime
 import email.utils
 import random

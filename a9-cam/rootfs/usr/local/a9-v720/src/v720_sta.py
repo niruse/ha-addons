@@ -84,7 +84,9 @@ class v720_sta(log):
             raise TypeError(f"[set_tcp_conn] Expected netsrv_tcp, got {type(tcp_conn).__name__}")
         self._tcp = tcp_conn
         self._tcpth = threading.Thread(
-            target=self.__tcp_hnd, name=f'TCP@{tcp_conn._host}:{tcp_conn._port}')
+            target=self.__tcp_hnd,
+            name=f'TCP-{tcp_conn._host}:{tcp_conn._port}'  # safe string
+        )
         self._tcpth.setDaemon(True)
         self._tcpth.start()
 
@@ -93,9 +95,12 @@ class v720_sta(log):
             raise TypeError(f"[set_udp_conn] Expected netsrv_udp, got {type(udp_conn).__name__}")
         self._udp = udp_conn
         self._udpth = threading.Thread(
-            target=self.__udp_hnd, name=f'UDP@{udp_conn._host}:{udp_conn._port}')
+            target=self.__udp_hnd,
+            name=f'UDP-{udp_conn._host}:{udp_conn._port}'  # safe string
+        )
         self._udpth.setDaemon(True)
         self._udpth.start()
+
 
     def __tcp_hnd(self):
         try:

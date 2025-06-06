@@ -371,6 +371,7 @@ class v720_http(log, BaseHTTPRequestHandler):
         else:
             self.info(f'GET unknown path: {self.path}')
             self.send_error(404, 'Not found')
+
     def do_POST(self):
         ret = None
         hdr = [
@@ -389,17 +390,9 @@ class v720_http(log, BaseHTTPRequestHandler):
             print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
             print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
 
-        def register_fake_device(uid):
-            if uid not in v720_http._dev_lst:
-                fake = v720_sta(uid=uid, host=self.client_address[0], port=TCP_PORT)
-                v720_http.add_dev(fake)
-                _fake_device_store[uid] = fake
-                self.info(f'📦 Registered fake device UID: {uid} with host: {fake.host}:{fake.port}')
-
         if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
             uid = f"0800c00{random.randint(0,99999):05d}"
             shared_uid[0] = uid
-            register_fake_device(uid)
             log_urls(uid)
             ret = {
                 "code": 200,
@@ -421,9 +414,8 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'
+                uid = f'{random.randint(0,99999):05d}'  # fallback
             shared_uid[0] = uid
-            register_fake_device(uid)
             log_urls(uid)
 
             gws = netifaces.gateways()
@@ -451,9 +443,8 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'
+                uid = f'{random.randint(0,99999):05d}'  # fallback
             shared_uid[0] = uid
-            register_fake_device(uid)
             log_urls(uid)
 
             ret = {

@@ -80,18 +80,49 @@ class v720_sta(log):
         return self._tcp._port
 
     def set_tcp_conn(self, tcp_conn: netsrv_tcp):
+        if not isinstance(tcp_conn, netsrv_tcp):
+            raise TypeError(f"[set_tcp_conn] Expected netsrv_tcp, got {type(tcp_conn).__name__}")
         self._tcp = tcp_conn
         self._tcpth = threading.Thread(
-            target=self.__tcp_hnd, name=f'{tcp_conn}')
+            target=self.__tcp_hnd, name=f'TCP@{tcp_conn._host}:{tcp_conn._port}')
         self._tcpth.setDaemon(True)
         self._tcpth.start()
 
     def set_udp_conn(self, udp_conn: netsrv_udp):
+        if not isinstance(udp_conn, netsrv_udp):
+            raise TypeError(f"[set_udp_conn] Expected netsrv_udp, got {type(udp_conn).__name__}")
         self._udp = udp_conn
         self._udpth = threading.Thread(
-            target=self.__udp_hnd, name=f'{udp_conn}')
+            target=self.__udp_hnd, name=f'UDP@{udp_conn._host}:{udp_conn._port}')
         self._udpth.setDaemon(True)
         self._udpth.start()
+
+    def __tcp_hnd(self):
+        try:
+            if not hasattr(self._tcp, "is_closed"):
+                raise AttributeError("[__tcp_hnd] TCP connection missing 'is_closed'")
+            while not self._tcp.is_closed:
+                self.__on_tcp_rcv(self._tcp.recv())
+        except Exception as e:
+            self.err(f"TCP thread error: {e}")
+        finally:
+            if hasattr(self, "_udp") and self._udp:
+                try:
+                    self._udp.close()
+                except Exception:
+                    pass
+            if self._disconnect_cb is not None and callable(self._disconnect_cb):
+                self._disconnect_cb(self)
+
+    def __udp_hnd(self):
+        try:
+            if not hasattr(self._udp, "is_closed"):
+                raise AttributeError("[__udp_hnd] UDP connection missing 'is_closed'")
+            while not self._udp.is_closed:
+                self.__on_udp_rcv(self._udp.recv())
+        except Exception as e:
+            self.err(f"UDP thread error: {e}")
+
 
     def set_vframe_cb(self, cb: callable):
         if cb is not None and callable(cb):
@@ -129,15 +160,6 @@ class v720_sta(log):
         else:
             self._disconnect_cb = None
 
-    def __tcp_hnd(self):
-        while not self._tcp.is_closed:
-            self.__on_tcp_rcv(self._tcp.recv())
-
-        if self._udp is not None:
-            self._udp.close()
-
-        if self._disconnect_cb is not None and callable(self._disconnect_cb):
-            self._disconnect_cb(self)
 
     def __on_tcp_rcv(self, data: bytes):
         if data is None or len(data) == 0:
@@ -150,10 +172,6 @@ class v720_sta(log):
             self._raw_hnd_lst[f'{req.cmd}'](self._tcp, data)
         else:
             self.warn(f'Unknown request {req}')
-
-    def __udp_hnd(self):
-        while not self._udp.is_closed:
-            self.__on_udp_rcv(self._udp.recv())
 
     def __on_udp_rcv(self, data):
         req = prot_udp.resp(data)

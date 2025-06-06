@@ -426,7 +426,8 @@ IrLed: http://{host}:{port}/dev/{id}/cmd?code=202&IrLed=1
 Flip: http://{host}:{port}/dev/{id}/cmd?code=216&mirrorFlip=4\033[0m
 ''')
 def start_srv(_http_port):
-    import v720_http
+    from v720_http import v720_http
+
 
     devices = []
     _mtx = threading.Lock()

@@ -23,20 +23,33 @@ import netifaces
 from netcl_udp import netcl_udp
 
 from v720_sta import v720_sta
+from http.server import HTTPServer
+from socketserver import ThreadingMixIn
+from typing import Dict
+
 
 TCP_PORT = 6123
 HTTP_PORT = 80
 shared_uid = [None]  # Used to store UID from POST endpoints
 
-_devices = {}
+_devices: Dict[str, v720_sta] = {}
 
-def add_dev(dev):
-    _devices[dev.id] = dev
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
 
-def rm_dev(dev):
-    _devices.pop(dev.id, None)
+def serve_forever(port):
+    server = ThreadedHTTPServer(('', port), v720_http)
+    server.serve_forever()
 
-def get_dev(uid):
+def add_dev(dev: v720_sta):
+    if dev.id:
+        _devices[dev.id] = dev
+
+def rm_dev(dev: v720_sta):
+    if dev.id in _devices:
+        del _devices[dev.id]
+
+def get_dev(uid: str) -> v720_sta | None:
     return _devices.get(uid)
 
 def get_all_devs():
@@ -88,6 +101,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             print(
                 f'--- if not try to use "sudo sysctl -w net.ipv4.ip_unprivileged_port_start={_http_port}"')
             exit(1)
+
 
     def __new__(cls, *args, **kwargs) -> v720_http:
         ret = super(v720_http, cls).__new__(cls)

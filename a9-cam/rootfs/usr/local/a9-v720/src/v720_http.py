@@ -410,7 +410,6 @@ class v720_http(log, BaseHTTPRequestHandler):
             shared_uid[0] = uid  # Store for later reuse
 
             gws = netifaces.gateways()
-            ip = netcl_udp.get_ip(list(gws['default'].values())[0][0], 80)
             ret = {
                 "code": 200,
                 "message": "OK",
@@ -420,7 +419,7 @@ class v720_http(log, BaseHTTPRequestHandler):
                     "isBind": "8",
                     "domain": "v720.naxclow.com",
                     "updateUrl": None,
-                    "host": ip,
+                    "host": netcl_udp.get_ip(list(gws['default'].values())[0][0], 80),
                     "currTime": f'{int(datetime.timestamp(datetime.now()))}',
                     "pwd": "deadbeef",
                     "version": None
@@ -440,12 +439,19 @@ class v720_http(log, BaseHTTPRequestHandler):
                 if param.startswith('devicesCode='):
                     uid = param.split('=')[1]
                     break
+
             if uid is None and shared_uid[0] is not None:
                 uid = shared_uid[0]
             elif uid is None:
                 uid = f'{random.randint(0, 99999):05d}'  # fallback
 
-            shared_uid[0] = uid
+            if shared_uid[0] != uid:
+                shared_uid[0] = uid
+                self.info("-------- A9 V720 fake-server updated UID (from /getDevInfo) --------")
+                self.info(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
+                self.info(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
+                self.info(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
+                self.info(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
 
             ret = {
                 "code": 0,

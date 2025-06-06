@@ -404,6 +404,8 @@ Flip: http://{host}:{port}/dev/{id}/cmd?code=216&mirrorFlip=4\033[0m
 ''')
 def start_srv(_http_port):
     from v720_http import v720_http
+    from netsrv_tcp import netsrv_tcp
+    from netsrv_udp import netsrv_udp
 
     devices = []
     _mtx = threading.Lock()
@@ -413,13 +415,13 @@ def start_srv(_http_port):
         v720_http.add_dev(dev)
 
     def on_disconnect_dev(dev: v720_sta):
-        if dev in devices:
-            print(
-                f'\033[31m-------- Device {dev.id} has been disconnected --------\033[0m')
-            devices.remove(dev)
-            v720_http.rm_dev(dev)
-        else:
-            print('Unknown dev')
+        with _mtx:
+            if dev in devices:
+                print(f'\033[31m-------- Device {dev.id} has been disconnected --------\033[0m')
+                devices.remove(dev)
+                v720_http.rm_dev(dev)
+            else:
+                print('Unknown dev')
 
     def tcp_thread():
         with netsrv_tcp('', v720_sta.TCP_PORT) as _tcp:
@@ -440,13 +442,14 @@ def start_srv(_http_port):
                     dev_found = False
                     with _mtx:
                         for dev in devices:
-                            if dev.host == fork._host:
+                            # Validate that dev._tcp has _host (is a netsrv_tcp object)
+                            if hasattr(dev._tcp, "_host") and dev._tcp._host == fork._host:
                                 dev.set_udp_conn(fork)
                                 dev_found = True
                                 break
 
                     if not dev_found:
-                        fork.info('Device for connection is not found')
+                        fork.info("UDP connection received, but no matching TCP device found.")
 
     http_th = threading.Thread(
         target=v720_http.serve_forever, name='HTTP-SRV', args=(_http_port,))

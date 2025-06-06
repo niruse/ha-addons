@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 from datetime import datetime
 import email.utils
@@ -18,7 +17,55 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import netifaces
 from netcl_udp import netcl_udp
-from v720_sta import v720_sta 
+
+class DummyConnection:
+    @property
+    def is_closed(self):
+        return False
+
+class v720_sta:
+    def __init__(self, id, host, port):
+        self.id = id
+        self.host = host
+        self.port = port
+        self._tcp = DummyConnection()
+        self._udp = DummyConnection()
+        self._aframe_cb = None
+        self._vframe_cb = None
+        self._tcp_thread = threading.Thread(target=self.__tcp_hnd, name=f"{id}_tcp", daemon=True)
+        self._udp_thread = threading.Thread(target=self.__udp_hnd, name=f"{id}_udp", daemon=True)
+        self._tcp_thread.start()
+        self._udp_thread.start()
+
+    def __tcp_hnd(self):
+        while not self._tcp.is_closed:
+            # Simulate connection alive
+            pass
+
+    def __udp_hnd(self):
+        while not self._udp.is_closed:
+            # Simulate connection alive
+            pass
+
+    def set_aframe_cb(self, cb):
+        self._aframe_cb = cb
+
+    def set_vframe_cb(self, cb):
+        self._vframe_cb = cb
+
+    def unset_aframe_cb(self, cb):
+        if self._aframe_cb == cb:
+            self._aframe_cb = None
+
+    def unset_vframe_cb(self, cb):
+        if self._vframe_cb == cb:
+            self._vframe_cb = None
+
+    def send_command(self, cmd):
+        # Print or simulate sending a command
+        print(f"[v720_sta] Command sent to {self.id}: {cmd}")
+
+from v720_sta import v720_sta
 
 TCP_PORT = 6123
 HTTP_PORT = 80
@@ -370,6 +417,7 @@ class v720_http(log, BaseHTTPRequestHandler):
         else:
             self.info(f'GET unknown path: {self.path}')
             self.send_error(404, 'Not found')
+
 
     def do_POST(self):
         global shared_uid

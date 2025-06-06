@@ -410,6 +410,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             shared_uid[0] = uid  # Store for later reuse
 
             gws = netifaces.gateways()
+            ip = netcl_udp.get_ip(list(gws['default'].values())[0][0], 80)
             ret = {
                 "code": 200,
                 "message": "OK",
@@ -419,7 +420,7 @@ class v720_http(log, BaseHTTPRequestHandler):
                     "isBind": "8",
                     "domain": "v720.naxclow.com",
                     "updateUrl": None,
-                    "host": netcl_udp.get_ip(list(gws['default'].values())[0][0], 80),
+                    "host": ip,
                     "currTime": f'{int(datetime.timestamp(datetime.now()))}',
                     "pwd": "deadbeef",
                     "version": None

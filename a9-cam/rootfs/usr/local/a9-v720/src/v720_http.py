@@ -19,9 +19,15 @@ import netifaces
 from netcl_udp import netcl_udp
 
 class DummyConnection:
+    def __init__(self):
+        self._closed = False
+
     @property
     def is_closed(self):
-        return False
+        return self._closed
+
+    def close(self):
+        self._closed = True
 
 class v720_sta:
     def __init__(self, id, host, port):
@@ -39,12 +45,10 @@ class v720_sta:
 
     def __tcp_hnd(self):
         while not self._tcp.is_closed:
-            # Simulate connection alive
             pass
 
     def __udp_hnd(self):
         while not self._udp.is_closed:
-            # Simulate connection alive
             pass
 
     def set_aframe_cb(self, cb):
@@ -62,7 +66,6 @@ class v720_sta:
             self._vframe_cb = None
 
     def send_command(self, cmd):
-        # Print or simulate sending a command
         print(f"[v720_sta] Command sent to {self.id}: {cmd}")
 
 from v720_sta import v720_sta

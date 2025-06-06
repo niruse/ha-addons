@@ -381,10 +381,17 @@ class v720_http(log, BaseHTTPRequestHandler):
         ]
         self.warn(f'POST {self.path}')
 
+        def log_urls(uid):
+            print("-------- A9 V720 fake-server updated UID --------")
+            print(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
+            print(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
+            print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
+            print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
+
         if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
             uid = f"0800c00{random.randint(0,99999):05d}"
             shared_uid[0] = uid
-            self.warn(f'[registerDevices] UID registered: {uid}')
+            log_urls(uid)
             ret = {
                 "code": 200,
                 "message": "OK",
@@ -405,11 +412,9 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'
-                self.warn(f'[getA9ConfCheck] UID generated as fallback: {uid}')
-            else:
-                self.warn(f'[getA9ConfCheck] UID received from devicesCode: {uid}')
+                uid = f'{random.randint(0,99999):05d}'  # fallback
             shared_uid[0] = uid
+            log_urls(uid)
 
             gws = netifaces.gateways()
             ret = {
@@ -429,23 +434,16 @@ class v720_http(log, BaseHTTPRequestHandler):
             }
 
         elif self.path.startswith('/app/api/ApiSysDevices/getDevInfo'):
-            uid = shared_uid[0]
-
+            uid = None
+            p = self.path[len('/app/api/ApiSysDevices/getDevInfo?'):]
+            for param in p.split('&'):
+                if param.startswith('devicesCode='):
+                    uid = param.split('=')[1]
+                    break
             if uid is None:
-                p = self.path[len('/app/api/ApiSysDevices/getDevInfo?'):]
-                for param in p.split('&'):
-                    if param.startswith('devicesCode='):
-                        uid = param.split('=')[1]
-                        shared_uid[0] = uid
-                        self.warn(f'[getDevInfo] UID updated from devicesCode: {uid}')
-                        break
-
-            if uid is None:
-                uid = f'{random.randint(0,99999):05d}'
-                shared_uid[0] = uid
-                self.warn(f'[getDevInfo] UID generated randomly: {uid}')
-            else:
-                self.warn(f'[getDevInfo] Using UID: {uid}')
+                uid = f'{random.randint(0,99999):05d}'  # fallback
+            shared_uid[0] = uid
+            log_urls(uid)
 
             ret = {
                 "code": 0,

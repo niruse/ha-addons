@@ -416,7 +416,11 @@ class v720_http(log, BaseHTTPRequestHandler):
 
             # Register device
             if uid not in v720_http._dev_lst:
-                dev = v720_sta(uid, "127.0.0.1", TCP_PORT)
+                dev = v720_http.get_dev(uid)
+                if not dev:
+                    self.send_error(404, f"Device {uid} not registered")
+                    return
+
                 v720_http.add_dev(dev)
                 self.info(f"Added virtual device {uid} to device list.")
 
@@ -466,7 +470,11 @@ class v720_http(log, BaseHTTPRequestHandler):
 
             # Register device
             if uid not in v720_http._dev_lst:
-                dev = v720_sta(uid, "127.0.0.1", TCP_PORT)
+                dev = v720_http.get_dev(uid)
+                if not dev:
+                    self.send_error(404, f"Device {uid} not registered")
+                    return
+
                 v720_http.add_dev(dev)
                 self.info(f"Added virtual device {uid} to device list.")
 

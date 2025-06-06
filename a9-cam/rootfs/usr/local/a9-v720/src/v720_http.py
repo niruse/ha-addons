@@ -46,15 +46,6 @@ class v720_sta:
         self._tcp_thread.start()
         self._udp_thread.start()
 
-    def __tcp_hnd(self):
-        while not self._tcp.is_closed:
-            pass
-
-    def __udp_hnd(self):
-        while not self._udp.is_closed:
-            pass
-
-
     def __udp_hnd(self):
         while not self._udp.is_closed:
             if self._vframe_cb:

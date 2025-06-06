@@ -68,7 +68,7 @@ class v720_sta:
     def send_command(self, cmd):
         print(f"[v720_sta] Command sent to {self.id}: {cmd}")
 
-from v720_sta import v720_sta
+#from v720_sta import v720_sta
 
 TCP_PORT = 6123
 HTTP_PORT = 80

@@ -428,8 +428,7 @@ def start_srv(_http_port):
                 fork = _tcp.fork()
                 if fork is not None:
                     with _mtx:
-                        dev = v720_sta(fork, init_done_cb=on_init_done,
-                                       disconnect_cb=on_disconnect_dev)
+                        dev = v720_sta(fork, init_done_cb=on_init_done, disconnect_cb=on_disconnect_dev)
                         devices.append(dev)
 
     def udp_thread():

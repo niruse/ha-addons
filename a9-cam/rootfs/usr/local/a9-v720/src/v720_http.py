@@ -409,6 +409,12 @@ class v720_http(log, BaseHTTPRequestHandler):
 
             shared_uid[0] = uid
 
+            # Register device
+            if uid not in v720_http._dev_lst:
+                dev = v720_sta(uid, "127.0.0.1", TCP_PORT)
+                v720_http.add_dev(dev)
+                self.info(f"Added virtual device {uid} to device list.")
+
             gws = netifaces.gateways()
             ret = {
                 "code": 200,
@@ -452,6 +458,12 @@ class v720_http(log, BaseHTTPRequestHandler):
                 self.info(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
                 self.info(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
                 self.info(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
+
+            # Register device
+            if uid not in v720_http._dev_lst:
+                dev = v720_sta(uid, "127.0.0.1", TCP_PORT)
+                v720_http.add_dev(dev)
+                self.info(f"Added virtual device {uid} to device list.")
 
             ret = {
                 "code": 0,

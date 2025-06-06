@@ -22,6 +22,7 @@ from v720_sta import v720_sta
 
 TCP_PORT = 6123
 HTTP_PORT = 80
+shared_uid = [None]  # Used to store UID from POST endpoints
 
 def put_nowait_or_clear_if_full(q:Queue, frame):
     try:

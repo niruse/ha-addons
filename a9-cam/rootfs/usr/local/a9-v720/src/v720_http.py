@@ -28,6 +28,21 @@ TCP_PORT = 6123
 HTTP_PORT = 80
 shared_uid = [None]  # Used to store UID from POST endpoints
 
+_devices = {}
+
+def add_dev(dev):
+    _devices[dev.id] = dev
+
+def rm_dev(dev):
+    _devices.pop(dev.id, None)
+
+def get_dev(uid):
+    return _devices.get(uid)
+
+def get_all_devs():
+    return list(_devices.values())
+
+
 def put_nowait_or_clear_if_full(q:Queue, frame):
     try:
         q.put_nowait(frame)

@@ -371,6 +371,8 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.send_error(404, 'Not found')
 
     def do_POST(self):
+        global shared_uid  # Declare global to avoid NameError
+
         ret = None
         hdr = [
             'HTTP/1.1 200',
@@ -381,21 +383,11 @@ class v720_http(log, BaseHTTPRequestHandler):
         ]
         self.warn(f'POST {self.path}')
 
-        def log_urls(uid):
-            print("-------- A9 V720 fake-server updated UID --------")
-            print(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
-            print(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
-            print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
-            print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
-
         if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
-            uid = f"0800c00{random.randint(0,99999):05d}"
-            shared_uid[0] = uid
-            log_urls(uid)
             ret = {
                 "code": 200,
                 "message": "OK",
-                "data": uid
+                "data": f"0800c00{random.randint(0, 99999):05d}"
             }
 
         elif self.path.startswith('/app/api/ApiSysDevicesBatch/confirm'):
@@ -412,9 +404,9 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'  # fallback
-            shared_uid[0] = uid
-            log_urls(uid)
+                uid = f'{random.randint(0, 99999):05d}'  # fallback
+
+            shared_uid[0] = uid  # Store for later reuse
 
             gws = netifaces.gateways()
             ret = {
@@ -433,6 +425,12 @@ class v720_http(log, BaseHTTPRequestHandler):
                 }
             }
 
+            self.info("-------- A9 V720 fake-server updated UID --------")
+            self.info(f"Stream: http://127.0.0.1:80/dev/{uid}/stream")
+            self.info(f"Snapshot: http://127.0.0.1:80/dev/{uid}/snapshot")
+            self.info(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
+            self.info(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
+
         elif self.path.startswith('/app/api/ApiSysDevices/getDevInfo'):
             uid = None
             p = self.path[len('/app/api/ApiSysDevices/getDevInfo?'):]
@@ -440,10 +438,12 @@ class v720_http(log, BaseHTTPRequestHandler):
                 if param.startswith('devicesCode='):
                     uid = param.split('=')[1]
                     break
-            if uid is None:
-                uid = f'{random.randint(0,99999):05d}'  # fallback
+            if uid is None and shared_uid[0] is not None:
+                uid = shared_uid[0]
+            elif uid is None:
+                uid = f'{random.randint(0, 99999):05d}'  # fallback
+
             shared_uid[0] = uid
-            log_urls(uid)
 
             ret = {
                 "code": 0,
@@ -469,6 +469,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.send_header('Connection', 'close')
             self.end_headers()
             self.wfile.write(b'Unknown POST request')
+
 
 if __name__ == '__main__':
     try:

@@ -23,6 +23,7 @@ from v720_sta import v720_sta
 TCP_PORT = 6123
 HTTP_PORT = 80
 shared_uid = [None]  # Used to store UID from POST endpoints
+_fake_device_store = {}
 
 def put_nowait_or_clear_if_full(q:Queue, frame):
     try:
@@ -370,7 +371,6 @@ class v720_http(log, BaseHTTPRequestHandler):
         else:
             self.info(f'GET unknown path: {self.path}')
             self.send_error(404, 'Not found')
-
     def do_POST(self):
         ret = None
         hdr = [
@@ -389,9 +389,17 @@ class v720_http(log, BaseHTTPRequestHandler):
             print(f"IrLed: http://127.0.0.1:80/dev/{uid}/cmd?code=202&IrLed=1")
             print(f"Flip: http://127.0.0.1:80/dev/{uid}/cmd?code=216&mirrorFlip=4")
 
+        def register_fake_device(uid):
+            if uid not in v720_http._dev_lst:
+                fake = v720_sta(uid=uid, host=self.client_address[0], port=TCP_PORT)
+                v720_http.add_dev(fake)
+                _fake_device_store[uid] = fake
+                self.info(f'📦 Registered fake device UID: {uid} with host: {fake.host}:{fake.port}')
+
         if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
             uid = f"0800c00{random.randint(0,99999):05d}"
             shared_uid[0] = uid
+            register_fake_device(uid)
             log_urls(uid)
             ret = {
                 "code": 200,
@@ -413,8 +421,9 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'  # fallback
+                uid = f'{random.randint(0,99999):05d}'
             shared_uid[0] = uid
+            register_fake_device(uid)
             log_urls(uid)
 
             gws = netifaces.gateways()
@@ -442,8 +451,9 @@ class v720_http(log, BaseHTTPRequestHandler):
                     uid = param.split('=')[1]
                     break
             if uid is None:
-                uid = f'{random.randint(0,99999):05d}'  # fallback
+                uid = f'{random.randint(0,99999):05d}'
             shared_uid[0] = uid
+            register_fake_device(uid)
             log_urls(uid)
 
             ret = {
@@ -470,6 +480,7 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.send_header('Connection', 'close')
             self.end_headers()
             self.wfile.write(b'Unknown POST request')
+
 
 if __name__ == '__main__':
     try:

@@ -22,66 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import netifaces
 from netcl_udp import netcl_udp
 
-class DummyConnection:
-    def __init__(self):
-        self._closed = False
-
-    @property
-    def is_closed(self):
-        return self._closed
-
-    def close(self):
-        self._closed = True
-
-class v720_sta:
-    def __init__(self, id, host, port):
-        self.id = id
-        self.host = host
-        self.port = port
-        self._tcp = DummyConnection()
-        self._udp = DummyConnection()
-        self._aframe_cb = None
-        self._vframe_cb = None
-        self._tcp_thread = threading.Thread(target=self.__tcp_hnd, name=f"{id}_tcp", daemon=True)
-        self._udp_thread = threading.Thread(target=self.__udp_hnd, name=f"{id}_udp", daemon=True)
-        self._tcp_thread.start()
-        self._udp_thread.start()
-
-    def __udp_hnd(self):
-        while not self._udp.is_closed:
-            if self._vframe_cb:
-                # Fake JPEG frame (start and end bytes of JPEG + random content)
-                fake_frame = b'\xff\xd8' + os.urandom(1024) + b'\xff\xd9'
-                self._vframe_cb(self, fake_frame)
-            time.sleep(0.1)  # simulate 10 fps
-
-    def __tcp_hnd(self):
-        while not self._tcp.is_closed:
-            if self._aframe_cb:
-                # Fake G.711 audio (ALaw 8000Hz mono — use 160 bytes for 20ms)
-                fake_audio = os.urandom(160)
-                self._aframe_cb(self, fake_audio)
-            time.sleep(0.02)  # simulate 50 fps (20ms packets)
-
-
-    def set_aframe_cb(self, cb):
-        self._aframe_cb = cb
-
-    def set_vframe_cb(self, cb):
-        self._vframe_cb = cb
-
-    def unset_aframe_cb(self, cb):
-        if self._aframe_cb == cb:
-            self._aframe_cb = None
-
-    def unset_vframe_cb(self, cb):
-        if self._vframe_cb == cb:
-            self._vframe_cb = None
-
-    def send_command(self, cmd):
-        print(f"[v720_sta] Command sent to {self.id}: {cmd}")
-
-#from v720_sta import v720_sta
+from v720_sta import v720_sta
 
 TCP_PORT = 6123
 HTTP_PORT = 80

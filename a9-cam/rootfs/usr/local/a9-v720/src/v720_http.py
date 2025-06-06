@@ -370,92 +370,92 @@ class v720_http(log, BaseHTTPRequestHandler):
             self.info(f'GET unknown path: {self.path}')
             self.send_error(404, 'Not found')
 
-def do_POST(self):
-    ret = None
-    hdr = [
-        'HTTP/1.1 200',
-        'Server: nginx/1.14.0 (Ubuntu)',
-        f'Date: {email.utils.format_datetime(datetime.now())}',
-        'Content-Type: application/json',
-        'Connection: keep-alive',
-    ]
-    self.warn(f'POST {self.path}')
+    def do_POST(self):
+        ret = None
+        hdr = [
+            'HTTP/1.1 200',
+            'Server: nginx/1.14.0 (Ubuntu)',
+            f'Date: {email.utils.format_datetime(datetime.now())}',
+            'Content-Type: application/json',
+            'Connection: keep-alive',
+        ]
+        self.warn(f'POST {self.path}')
 
-    if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
-        ret = {
-            "code": 200,
-            "message": "OK",
-            "data": f"0800c00{random.randint(0,99999):05d}"
-        }
-
-    elif self.path.startswith('/app/api/ApiSysDevicesBatch/confirm'):
-        ret = {"code": 200, "message": "OK", "data": None}
-
-    elif self.path.startswith('/app/api/ApiSysDevices/a9bindingAppDevice'):
-        ret = {"code": 200, "message": "OK", "data": None}
-
-    elif self.path.startswith('/app/api/ApiServer/getA9ConfCheck'):
-        uid = None
-        p = self.path[len('/app/api/ApiServer/getA9ConfCheck?'):]
-        for param in p.split('&'):
-            if param.startswith('devicesCode='):
-                uid = param.split('=')[1]
-                break
-        if uid is None:
-            uid = f'{random.randint(0,99999):05d}'  # fallback if devicesCode not provided
-
-        gws = netifaces.gateways()
-        ret = {
-            "code": 200,
-            "message": "OK",
-            "data": {
-                "tcpPort": TCP_PORT,
-                "uid": uid,
-                "isBind": "8",
-                "domain": "v720.naxclow.com",
-                "updateUrl": None,
-                "host": netcl_udp.get_ip(list(gws['default'].values())[0][0], 80),
-                "currTime": f'{int(datetime.timestamp(datetime.now()))}',
-                "pwd": "deadbeef",
-                "version": None
+        if self.path.startswith('/app/api/ApiSysDevicesBatch/registerDevices'):
+            ret = {
+                "code": 200,
+                "message": "OK",
+                "data": f"0800c00{random.randint(0,99999):05d}"
             }
-        }
 
-    elif self.path.startswith('/app/api/ApiSysDevices/getDevInfo'):
-        # Handle /getDevInfo safely
-        uid = None
-        p = self.path[len('/app/api/ApiSysDevices/getDevInfo?'):]
-        for param in p.split('&'):
-            if param.startswith('devicesCode='):
-                uid = param.split('=')[1]
-                break
-        if uid is None:
-            uid = f'{random.randint(0,99999):05d}'  # fallback
+        elif self.path.startswith('/app/api/ApiSysDevicesBatch/confirm'):
+            ret = {"code": 200, "message": "OK", "data": None}
 
-        ret = {
-            "code": 0,
-            "data": {
-                "uid": uid,
-                "deviceName": "A9 Camera",
-                "status": "online"
+        elif self.path.startswith('/app/api/ApiSysDevices/a9bindingAppDevice'):
+            ret = {"code": 200, "message": "OK", "data": None}
+
+        elif self.path.startswith('/app/api/ApiServer/getA9ConfCheck'):
+            uid = None
+            p = self.path[len('/app/api/ApiServer/getA9ConfCheck?'):]
+            for param in p.split('&'):
+                if param.startswith('devicesCode='):
+                    uid = param.split('=')[1]
+                    break
+            if uid is None:
+                uid = f'{random.randint(0,99999):05d}'  # fallback if devicesCode not provided
+
+            gws = netifaces.gateways()
+            ret = {
+                "code": 200,
+                "message": "OK",
+                "data": {
+                    "tcpPort": TCP_PORT,
+                    "uid": uid,
+                    "isBind": "8",
+                    "domain": "v720.naxclow.com",
+                    "updateUrl": None,
+                    "host": netcl_udp.get_ip(list(gws['default'].values())[0][0], 80),
+                    "currTime": f'{int(datetime.timestamp(datetime.now()))}',
+                    "pwd": "deadbeef",
+                    "version": None
+                }
             }
-        }
 
-    if ret is not None:
-        ret = json.dumps(ret)
-        hdr.append(f'Content-Length: {len(ret)}')
-        hdr.append('\r\n')
-        hdr.append(ret)
-        resp = '\r\n'.join(hdr)
-        self.info(f'sending: {resp}')
-        self.wfile.write(resp.encode('utf-8'))
-    else:
-        self.err(f'Unknown POST query @ {self.path}')
-        self.send_response(404)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Connection', 'close')
-        self.end_headers()
-        self.wfile.write(b'Unknown POST request')
+        elif self.path.startswith('/app/api/ApiSysDevices/getDevInfo'):
+            # Handle /getDevInfo safely
+            uid = None
+            p = self.path[len('/app/api/ApiSysDevices/getDevInfo?'):]
+            for param in p.split('&'):
+                if param.startswith('devicesCode='):
+                    uid = param.split('=')[1]
+                    break
+            if uid is None:
+                uid = f'{random.randint(0,99999):05d}'  # fallback
+
+            ret = {
+                "code": 0,
+                "data": {
+                    "uid": uid,
+                    "deviceName": "A9 Camera",
+                    "status": "online"
+                }
+            }
+
+        if ret is not None:
+            ret = json.dumps(ret)
+            hdr.append(f'Content-Length: {len(ret)}')
+            hdr.append('\r\n')
+            hdr.append(ret)
+            resp = '\r\n'.join(hdr)
+            self.info(f'sending: {resp}')
+            self.wfile.write(resp.encode('utf-8'))
+        else:
+            self.err(f'Unknown POST query @ {self.path}')
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Connection', 'close')
+            self.end_headers()
+            self.wfile.write(b'Unknown POST request')
 
 if __name__ == '__main__':
     try:
